@@ -20,5 +20,8 @@ userRouter.post("/logout",userController.logout)
 // for api /api/auth/logout-All
 userRouter.post("/logout-All",userController.logoutAll)
 
+// for api /api/auth/login
+userRouter.post("/login",userController.login)
+
 export default userRouter
 

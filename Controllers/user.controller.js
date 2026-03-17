@@ -22,7 +22,7 @@ export const register=async (req,res,next)=>{
             message:"user already registerd!"
         })
     }
-    const hashedPassword=await crypto.createHash("sha256").update(password).digest("hex")
+    const hashedPassword= crypto.createHash("sha256").update(password).digest("hex")
 
     const user=await userModel.create({
         username,
@@ -193,9 +193,9 @@ export const logoutAll=async (req,res,next)=>{
         userID:decoded.id,
         revoke:false
     },{
-        $set:{
+        
             revoke:true
-        }
+        
     })
 
     res.clearCookie("refreshToken")
@@ -204,4 +204,64 @@ export const logoutAll=async (req,res,next)=>{
         success:true,
         message:"Logged out from all devices successfully!"
     })
+}
+
+export const login=async (req,res,next)=>{
+
+    const {email,password}=req.body
+
+    const isPresent=await userModel.findOne({
+        email
+    })
+
+    if(!isPresent){
+        return res.status(404).json({
+            success:false,
+            message:"user not found!"
+        })
+    }
+
+    const hashedPassword=crypto.createHash("sha256").update(password).digest("hex")
+
+    if(isPresent.password!==hashedPassword) {
+        return res.status(401).json({
+            success:false,
+            message:"invalid credentials!"
+        })
+    }
+
+    const refreshToken=jwt.sign({
+        id:isPresent._id
+    },config.JWT_SCRET_KEY,{
+        expiresIn:"7d"
+    })
+    
+    res.cookie("refreshToken", refreshToken,{
+        httpOnly:true,
+        secure:false,
+        sameSite:"strict",
+        maxAge:7*24*60*60*1000
+    })
+
+    const session=await sessionModel.create({
+        userID:isPresent._id,
+        refrehTokenHashed:crypto.createHash("sha256").update(refreshToken).digest("hex"),
+        ip:req.ip,
+        userAgent:req.headers["user-agent"]
+    })
+
+    const accessToken=jwt.sign({
+        id:isPresent._id,
+        sessionID:session._id
+    },config.JWT_SCRET_KEY,{
+        expiresIn:"15m"
+    })
+
+    res.status(200).json({
+        success:true,
+        message:"Login successful!",
+        accessToken
+    })
+
+
 }
