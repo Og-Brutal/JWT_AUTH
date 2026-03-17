@@ -50,5 +50,12 @@ userRouter.post("/logout-all",userController.logoutAll)
  */
 userRouter.post("/login",userController.login)
 
+/**
+ * @route POST /api/auth/verify-email
+ * @desc Verify user's email using OTP
+ * @access Public
+ */
+userRouter.post("/verify-email",userController.verifyEmail)
+
 export default userRouter
 
