@@ -42,7 +42,7 @@ export const register=async (req,res,next)=>{
         sameSite:"strict",
         maxAge:7*24*60*60*1000
     });
-    const refrehTokenHashed=await crypto.createHash("sha256").update(refreshToken).digest("hex")
+    const refrehTokenHashed= crypto.createHash("sha256").update(refreshToken).digest("hex")
 
     const session=await sessionModel.create({
         userID:user._id,
@@ -148,7 +148,7 @@ export const logout=async (req,res,next)=>{
 
     const decoded=jwt.verify(refreshToken,config.JWT_SCRET_KEY)
 
-    const refreshTokenHashed=await crypto.createHash("sha256").update(refreshToken).digest("hex")
+    const refreshTokenHashed= crypto.createHash("sha256").update(refreshToken).digest("hex")
 
     const session=await sessionModel.findOne({
         userID:decoded.id,
@@ -173,4 +173,35 @@ export const logout=async (req,res,next)=>{
         message:"Logged out successfully!"
     })
 
+}
+
+
+
+export const logoutAll=async (req,res,next)=>{
+    let refreshToken=req.cookies.refreshToken
+    
+    if(!refreshToken){
+        return res.status(401).json({
+            success:false,
+            message:"refresh token not found!"
+        })
+    }  
+
+    const decoded=jwt.verify(refreshToken,config.JWT_SCRET_KEY)
+
+    await sessionModel.updateMany({
+        userID:decoded.id,
+        revoke:false
+    },{
+        $set:{
+            revoke:true
+        }
+    })
+
+    res.clearCookie("refreshToken")
+
+    res.status(200).json({
+        success:true,
+        message:"Logged out from all devices successfully!"
+    })
 }

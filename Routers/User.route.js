@@ -17,5 +17,8 @@ userRouter.get("/refresh-page",userController.refreshPage)
 // for api /api/auth/logout
 userRouter.post("/logout",userController.logout)
 
+// for api /api/auth/logout-All
+userRouter.post("/logout-All",userController.logoutAll)
+
 export default userRouter
 
